@@ -1,14 +1,27 @@
-var express = require('express');
+require('dotenv').config();
+const bodyParser = require('body-parser');
+const compression = require('compression');
+const cors = require('cors');
+const express = require('express');
+const morgan = require('morgan');
 
-var bodyParser = require('body-parser');
+const port = process.env.PORT || 8000;
 
-var users = require('./routes/users');
+const router = require('./routes');
 
-var app = express();
+const app = express();
+
+if (process.env.NODE_ENV === 'dev') {
+  app.use('dev');
+} else {
+  app.use(morgan('combined'));
+}
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
+app.use(compression());
+router(app);
 
-app.use('/api/v1/users', users);
+const server = app.listen(port, console.log(`Server listening on port ${port}`));
 
-module.exports = app;
+module.exports = server;

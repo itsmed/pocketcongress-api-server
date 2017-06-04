@@ -1,8 +1,8 @@
 require('dotenv').config();
-const http = require("http");
+const axios = require("axios");
 
 exports.getLocationInfoByAddress = (req, res) => {
-  const { street, apt, city, state, zip } = req.body.data;
+  const { street, apt, city, state } = req.body.data;
   let s, streetAddress;
 
   try {
@@ -12,7 +12,7 @@ exports.getLocationInfoByAddress = (req, res) => {
     Promise.reject(e);
   }
 
-  http.get(`https://api.geocod.io/v1/geocode?street=${streetAddress}&city=${city}&state=${state}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
+  axios.get(`https://api.geocod.io/v1/geocode?street=${streetAddress}&city=${city}&state=${state}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => res.json({
       results: mapGeocodioResults(r.data.results)
     }))
@@ -24,11 +24,9 @@ exports.getLocationInfoByAddress = (req, res) => {
 exports.getLocationInfoByCoords = (req, res) => {
   let { lat, long } = req.body.data;
   
-  http.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
+  axios.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => {
-      res.json({
-       results: mapGeocodioResults(r.data.results)
-      });
+      res.json({ results: mapGeocodioResults(r.data.results) });
     })
     .catch(e => {
       console.log(e.message);
