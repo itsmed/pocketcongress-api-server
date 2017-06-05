@@ -3,9 +3,9 @@ const federalReps = require('./federal_reps');
 
 
 module.exports = function(app) {
-  app.post('/api/location-by-address', location.getLocationInfoByAddress);
+  app.post('/api/district-by-address', location.getDistrictInfoByAddress);
 
-  app.post('/api/get-location-by-coords', location.getLocationInfoByCoords);
+  app.post('/api/get-district-by-coords', location.getDistrictInfoByCoords);
 
   app.post('/api/reps/all/federal/by-district', federalReps.getFederalRepsByDistrict);
 

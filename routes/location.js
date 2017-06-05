@@ -1,7 +1,7 @@
 require('dotenv').config();
 const axios = require("axios");
 
-exports.getLocationInfoByAddress = (req, res) => {
+exports.getDistrictInfoByAddress = (req, res) => {
   const { street, apt, city, state } = req.body.data;
   let s, streetAddress;
 
@@ -21,7 +21,7 @@ exports.getLocationInfoByAddress = (req, res) => {
     });
 };
 
-exports.getLocationInfoByCoords = (req, res) => {
+exports.getDistrictInfoByCoords = (req, res) => {
   let { lat, long } = req.body.data;
   
   axios.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
