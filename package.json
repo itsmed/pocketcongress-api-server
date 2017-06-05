@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node index.js",
+    "start": "node app.js",
     "sd": "NODE_ENV='dev' nodemon app.js",
     "test": "mocha spec/**/*.js"
   },
