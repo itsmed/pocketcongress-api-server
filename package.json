@@ -3,14 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "sd": "NODE_ENV='dev' nodemon index.js",
+    "start": "node index.js",
+    "sd": "NODE_ENV='dev' nodemon app.js",
     "test": "mocha spec/**/*.js"
   },
   "dependencies": {
+    "axios": "^0.16.2",
     "body-parser": "~1.13.2",
+    "compression": "^1.6.2",
     "cors": "^2.8.3",
     "dotenv": "^4.0.0",
-    "express": "~4.13.1"
+    "express": "~4.13.1",
+    "morgan": "^1.8.2"
   }
 }

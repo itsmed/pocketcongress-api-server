@@ -12,7 +12,7 @@ const router = require('./routes');
 const app = express();
 
 if (process.env.NODE_ENV === 'dev') {
-  app.use('dev');
+  app.use(morgan('dev'));
 } else {
   app.use(morgan('combined'));
 }
