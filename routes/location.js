@@ -11,6 +11,7 @@ exports.getDistrictInfoByAddress = (req, res) => {
   } catch (e) {
     Promise.reject(e);
   }
+  console.log('got here!', streetAddress, city, state);
 
   axios.get(`https://api.geocod.io/v1/geocode?street=${streetAddress}&city=${city}&state=${state}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => res.json({

@@ -1,5 +1,6 @@
 const location = require('./location');
 const federalReps = require('./federal_reps');
+const votes = require('./votes');
 
 
 module.exports = function(app) {
@@ -10,7 +11,7 @@ module.exports = function(app) {
   app.post('/api/reps/all/federal/by-district', federalReps.getFederalRepsByDistrict);
 
 
-
+  app.post('/api/votes/date', votes.getVotesByDate);
 
 
   app.get('/', (req, res) => {
