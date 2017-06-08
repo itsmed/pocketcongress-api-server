@@ -4,6 +4,7 @@ const compression = require('compression');
 const cors = require('cors');
 const express = require('express');
 const morgan = require('morgan');
+const path = require('path');
 
 const port = process.env.PORT || 8000;
 
@@ -21,6 +22,11 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(compression());
 router(app);
+
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+});
 
 const server = app.listen(port, console.log(`Server listening on port ${port}`));
 
