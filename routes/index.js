@@ -4,7 +4,7 @@ const votes = require('./votes');
 
 
 module.exports = function(app) {
-  app.post('/api/district-by-address', location.getDistrictInfoByAddress);
+  app.post('/api/get-district-by-address', location.getDistrictInfoByAddress);
 
   app.post('/api/get-district-by-coords', location.getDistrictInfoByCoords);
 
