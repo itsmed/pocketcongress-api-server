@@ -24,12 +24,14 @@ exports.getDistrictInfoByAddress = (req, res) => {
 };
 
 exports.getDistrictInfoByCoords = (req, res) => {
-  console.log(req.body, 'data', req.data);
+  console.log(req.body.data, 'data', req.data);
   let { lat, long } = req.body.data;
  
   axios.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => {
-      res.json({ results: mapGeocodioResults(r.data.results) });
+      console.log('response from api', r.data.results);
+      // res.json({ results: mapGeocodioResults(r.data.r/esults) });
+      return res.send({ results: r.data.results });
     })
     .catch(e => {
       console.log(e.message);
