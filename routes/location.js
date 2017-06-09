@@ -24,8 +24,8 @@ exports.getDistrictInfoByAddress = (req, res) => {
 };
 
 exports.getDistrictInfoByCoords = (req, res) => {
-  let { lat, long } = req.body.data;
   console.log(req.body, 'data', req.data);
+  let { lat, long } = req.body.data;
  
   axios.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => {
