@@ -2,7 +2,6 @@ require('dotenv').config();
 const axios = require("axios");
 
 exports.getDistrictInfoByAddress = (req, res) => {
-  console.log(req.body, 'data', req.data);
   const { street, apt, city, state } = req.body.data;
   let s, streetAddress;
 
@@ -29,12 +28,9 @@ exports.getDistrictInfoByCoords = (req, res) => {
  
   axios.get(`https://api.geocod.io/v1/reverse?q=${lat},${long}&fields=cd,stateleg&api_key=${process.env.GEOCODIO_API_KEY}`)
     .then(r => {
-      console.log('response from api', r.data.results);
-      // res.json({ results: mapGeocodioResults(r.data.r/esults) });
-      return res.send({ results: r.data.results });
+      res.json({ results: mapGeocodioResults(r.data.results) });
     })
     .catch(e => {
-      console.log(e.message);
       res.status(200).json({ error: 'An error occured, please try again' });
     });
 };
