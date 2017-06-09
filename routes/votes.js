@@ -17,7 +17,8 @@ exports.getVotesByDate = function(req, res) {
       allData[resp.data.results.chamber] = resp.data.results;
     });
 
-    res.json({ data: allData }); 
+
+    res.json(allData); 
   })
   .catch(err => res.json({ error: err.message }));
 };
