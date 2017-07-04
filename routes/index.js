@@ -12,5 +12,6 @@ module.exports = function(app) {
 
 
   app.post('/api/votes/date', votes.getVotesByDate);
+  app.post('/api/votes/specific-bill', votes.getSpecificBill);
 
 };

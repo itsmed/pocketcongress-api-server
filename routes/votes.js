@@ -1,6 +1,8 @@
 require('dotenv').config();
 const axios = require('axios');
 
+const { db } = require('../firebase-init');
+
 axios.defaults.headers['X-API-KEY'] = process.env.PROPUBLICA_API_KEY;
 
 exports.getVotesByDate = function(req, res) {
@@ -12,43 +14,98 @@ exports.getVotesByDate = function(req, res) {
   Promise.all([house, senate])
   .then(responses => {
     const allData = {};
-    const proms = [];
 
-    responses.forEach(resp => {
-      const newVotes = [];
-      const votes = resp.data.results.votes;
+    console.log(responses[0].data.results);
 
-      for(let i = 0; i < votes.length; i++) {
-        const vote = votes[i];
+    const filteredResponses = responses.map(resp => Object.assign({}, resp.data.results, {
+      votes: resp.data.results.votes.filter(r => r.bill || r.nomination)
+    }));
 
-        if(vote.bill) {
-          proms.push(axios.get(vote.bill.api_uri));
-        } else if(vote.nomination) {
-          proms.push(axios.get(`https://api.propublica.org/congress/v1/115/nominees/${vote.nomination.number}.json`));
-        } else {
-          console.log('[IGNORING ITEM]', vote);
-          continue;
-        }
-      }
 
-      Promise.all(proms)
-        .then(voteResps => {
-          voteResps.forEach(voteResp => {
-            newVotes.push(voteResp.data.results[0]);
-          });
-          return newVotes;
-        })
-        .then(voteArray => {
-          delete resp.data.results.votes;
-          resp.data.results.votes = voteArray;
+    filteredResponses.forEach(resp => {
 
-          allData[resp.data.results.chamber] = resp.data.results;
-          
-          return allData;    
-        })
-        .then(data => res.json(data))
-        .catch(err => console.log('oh no', err.message));      
+      resp.votes.forEach(v => v.bill ? seedDatabase(v.congress, v.bill.number.toLowerCase().replace(/\W/g, '')) : '');
+
+      allData[resp.chamber] = resp;
     });
+
+    
+    res.json(allData);
   })
   .catch(err => res.json({ error: err.message }));          
 };
+
+
+exports.getSpecificBill = function(req, res) {
+  const { congress, billId } = req.body.data;
+  
+  const ref = db.ref(`bills/${congress}/${billId}`);
+
+  ref.once('value', function(snap) {
+    if (snap.val() === null) {
+
+      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${111}/bills/${billId}.json`);
+      const billAmendmentsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/amendments.json`);
+      const billSubjectsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/subjects.json`);
+
+      let allData;
+
+      Promise.all([billDetailsPromise, billAmendmentsPromise, billSubjectsPromise])
+        .then((responses) => {
+          allData = Object.assign({}, responses[0].data.results[0]);
+          allData.amendments = responses[1].data.results[0].amendments;
+          allData.subjects = responses[2].data.results[0].subjects;
+
+          return allData;
+        })
+        .then(data => {
+          ref.set(data, function(err) {
+            if (err) {
+              return console.log('[DATABASE ERROR]', err.message);
+            }
+          });
+          return res.json(data);
+        })
+        .catch(err => console.log("hanlde errors better", err.message));
+    } else {
+      return res.json({ data: snap.val() });
+    }
+  });
+
+};
+
+function seedDatabase(congress, billId) {
+  // console.log('seed database', congress, billId);
+  const ref = db.ref(`bills/${congress}/${billId}`);
+
+  ref.once('value', function(snap) {
+    if (snap.val() === null) {
+
+      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${111}/bills/${billId}.json`);
+      const billAmendmentsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/amendments.json`);
+      const billSubjectsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/subjects.json`);
+
+      let allData;
+
+      Promise.all([billDetailsPromise, billAmendmentsPromise, billSubjectsPromise])
+        .then((responses) => {
+          allData = Object.assign({}, responses[0].data.results[0]);
+          allData.amendments = responses[1].data.results[0].amendments;
+          allData.subjects = responses[2].data.results[0].subjects;
+
+          return allData;
+        })
+        .then(data => {
+          ref.set(data, function(err) {
+            if (err) {
+              return console.log('[DATABASE ERROR]', err.message);
+            }
+          });
+          return console.log('sucess');
+        })
+        .catch(err => console.log("hanlde errors better", err.message));
+    } else {
+      return console.log('already found');
+    }
+  });
+}
