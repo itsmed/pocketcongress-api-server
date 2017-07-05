@@ -3,7 +3,7 @@ const axios = require('axios');
 
 const { db } = require('../firebase-init');
 
-axios.defaults.headers['X-API-KEY'] = 'PsVtJffI796o7nlUmj0ISm53HnkgtDl9Bay1urC2' //process.env.PROPUBLICA_API_KEY;
+axios.defaults.headers['X-API-KEY'] = process.env.PROPUBLICA_API_KEY;
 
 exports.getVotesByDate = function(req, res) {
   const { month, year } = req.body.data;
@@ -157,18 +157,3 @@ function seedDatabaseWithBillData(congress, billId) {
     }
   });
 }
-
-// const { senateIds } = require('../Senate');
-// const { houseIds } = require('../House');
-// console.log(senateIds, houseIds);
-
-// const allIds = senateIds.concat(houseIds);
-
-// allIds.forEach(id => seedDatabaseWithRepData(id));
-
-db.ref('/federalReps')
-  // .orderByValue()
-  .once('value', function(snap) {
-    console.log('length', typeof snap.val(), Object.keys(snap.val()).length);
-  });
-
