@@ -24,15 +24,22 @@ exports.getVotesByDate = function(req, res) {
 
       resp.votes.forEach(v => {
         seedDatabaseWithVoteData(v.congress, resp.chamber.toLowerCase(), v.session, v.roll_call);
-        v.bill ? seedDatabaseWithBillData(v.congress, v.bill.number.toLowerCase().replace(/\W/g, '')) : '';
+
+        v.bill ? 
+          seedDatabaseWithBillData(v.congress, v.bill.number.toLowerCase().replace(/\W/g, '')) 
+        : 
+          v.nomination ?
+          seedDatabaseWithNomineeData(v.congress, v.nomination.number)
+        : '';
       });
 
       allData[resp.chamber] = resp;
     });
 
     
-    res.json(allData);
+    return allData;
   })
+  .then(data => res.json(data))
   .catch(err => res.json({ error: err.message }));          
 };
 
@@ -77,23 +84,47 @@ exports.getSpecificBill = function(req, res) {
 
 function seedDatabaseWithVoteData(congress, chamber, session, rollCall) {
   const ref = db.ref(`votes/${congress}/${chamber}/${session}/${rollCall}`);
-  axios.get(`https://api.propublica.org/congress/v1/${congress}/${chamber}/sessions/${session}/votes/${rollCall}.json`)
-    .then(res => {
-      if (res.data.status === 'ERROR') {
-        return console.log('FUCKED', res.data.errors);
-      }
-      res.data.results.votes.vote.positions
-        .forEach(p => {
-          ref.push({ id: p.member_id, position: p.vote_position }, err => {
-            if (err) {
-              console.log('fuk', err.message);
-            } else {
-              console.log('saved junk');
-            }
-          });
-        });
-    })
-    .catch(err => console.log('why erroring?', err.message));
+
+  ref.once('value', function(snap) {
+    if (snap.val() === null) {
+      axios.get(`https://api.propublica.org/congress/v1/${congress}/${chamber}/sessions/${session}/votes/${rollCall}.json`)
+        .then(res => {
+          if (res.data.status === 'ERROR') {
+            return console.log('FUCKED', res.data.errors);
+          }
+          res.data.results.votes.vote.positions
+            .forEach(p => {
+              ref.push({ id: p.member_id, position: p.vote_position }, err => {
+                if (err) {
+                  console.log('fuk', err.message);
+                } else {
+                  console.log('saved junk');
+                }
+              });
+            });
+        })
+        .catch(err => console.log('why erroring?', err.message));
+    } else {
+      return console.log(`${rollCall} Roll call vote for the ${session} of the ${congress} congress already found`);
+    }
+  });
+}
+
+function seedDatabaseWithNomineeData(congress, nomineeId) {
+  const ref = db.ref(`nominees/${congress}/${nomineeId}`);
+
+  ref.once('value', function(snap) {
+    if (snap.val() === null) {
+
+      return axios.get(`https://api.propublica.org/congress/v1/${congress}/nominees/${nomineeId}.json`)
+        .then(res => ref.set(res.data.results[0]))
+        .catch(err => console.log('errorr saving nominee data', err.message));
+    } else {
+      return console.log(nomineeId + ' nominee already found');
+    }
+  });
+
+
 }
 
 
@@ -116,12 +147,11 @@ function seedDatabaseWithRepData(id) {
         })
         .catch(err => console.log("no luck", err.message));
     } else {
-      return console.log('already in database', snap.val());
+      return console.log(id + ' rep already in database');
     }
 
   });
 }
-
 
 function seedDatabaseWithBillData(congress, billId) {
   const ref = db.ref(`bills/${congress}/${billId}`);
@@ -129,13 +159,13 @@ function seedDatabaseWithBillData(congress, billId) {
   ref.once('value', function(snap) {
     if (snap.val() === null) {
 
-      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${111}/bills/${billId}.json`);
+      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}.json`);
       const billAmendmentsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/amendments.json`);
       const billSubjectsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/subjects.json`);
 
       let allData;
 
-      Promise.all([billDetailsPromise, billAmendmentsPromise, billSubjectsPromise])
+      return Promise.all([billDetailsPromise, billAmendmentsPromise, billSubjectsPromise])
         .then((responses) => {
           allData = Object.assign({}, responses[0].data.results[0]);
           allData.amendments = responses[1].data.results[0].amendments;
@@ -149,11 +179,11 @@ function seedDatabaseWithBillData(congress, billId) {
               return console.log('[DATABASE ERROR]', err.message);
             }
           });
-          return console.log('sucess');
+          return console.log('sucess', data);
         })
         .catch(err => console.log("hanlde errors better", err.message));
     } else {
-      return console.log('already found');
+      return console.log(billId + ' bill specifics already found');
     }
   });
 }
