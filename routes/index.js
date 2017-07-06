@@ -10,8 +10,7 @@ module.exports = function(app) {
 
   app.post('/api/reps/all/federal/by-district', federalReps.getFederalRepsByDistrict);
 
-
-  app.post('/api/votes/date', votes.getVotesByDate);
-  app.post('/api/votes/specific-bill', votes.getSpecificBill);
+  app.get('/api/votes/date/:month/:year', votes.getVotesByDate);
+  app.get('/api/votes/specific-bill/:congress/:id', votes.getSpecificBill);
 
 };

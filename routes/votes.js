@@ -6,7 +6,7 @@ const { db } = require('../firebase-init');
 axios.defaults.headers['X-API-KEY'] = process.env.PROPUBLICA_API_KEY;
 
 exports.getVotesByDate = function(req, res) {
-  const { month, year } = req.body.data;
+  const { month, year } = req.params;
 
   const house = axios.get(`https://api.propublica.org/congress/v1/house/votes/${year}/${month}.json`);
   const senate = axios.get(`https://api.propublica.org/congress/v1/senate/votes/${year}/${month}.json`);
@@ -45,16 +45,16 @@ exports.getVotesByDate = function(req, res) {
 
 
 exports.getSpecificBill = function(req, res) {
-  const { congress, billId } = req.body.data;
+  const { congress, id } = req.params;
   
-  const ref = db.ref(`bills/${congress}/${billId}`);
+  const ref = db.ref(`bills/${congress}/${id}`);
 
   ref.once('value', function(snap) {
     if (snap.val() === null) {
 
-      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${111}/bills/${billId}.json`);
-      const billAmendmentsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/amendments.json`);
-      const billSubjectsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${billId}/subjects.json`);
+      const billDetailsPromise = axios.get(`https://api.propublica.org/congress/v1/${111}/bills/${id}.json`);
+      const billAmendmentsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${id}/amendments.json`);
+      const billSubjectsPromise = axios.get(`https://api.propublica.org/congress/v1/${congress}/bills/${id}/subjects.json`);
 
       let allData;
 
@@ -117,7 +117,12 @@ function seedDatabaseWithNomineeData(congress, nomineeId) {
     if (snap.val() === null) {
 
       return axios.get(`https://api.propublica.org/congress/v1/${congress}/nominees/${nomineeId}.json`)
-        .then(res => ref.set(res.data.results[0]))
+        .then(res => {
+          if (res.data.results === undefined) {
+            return console.log('failed to receive nominee data', res.data);
+          }
+          ref.set(res.data.results[0]);
+        })
         .catch(err => console.log('errorr saving nominee data', err.message));
     } else {
       return console.log(nomineeId + ' nominee already found');
