@@ -22,16 +22,16 @@ exports.getVotesByDate = function(req, res) {
 
     filteredResponses.forEach(resp => {
 
-      resp.votes.forEach(v => {
-        seedDatabaseWithVoteData(v.congress, resp.chamber.toLowerCase(), v.session, v.roll_call);
+      // resp.votes.forEach(v => {
+      //   seedDatabaseWithVoteData(v.congress, resp.chamber.toLowerCase(), v.session, v.roll_call);
 
-        v.bill ? 
-          seedDatabaseWithBillData(v.congress, v.bill.number.toLowerCase().replace(/\W/g, '')) 
-        : 
-          v.nomination ?
-          seedDatabaseWithNomineeData(v.congress, v.nomination.number)
-        : '';
-      });
+      //   v.bill ? 
+      //     seedDatabaseWithBillData(v.congress, v.bill.number.toLowerCase().replace(/\W/g, '')) 
+      //   : 
+      //     v.nomination ?
+      //     seedDatabaseWithNomineeData(v.congress, v.nomination.number)
+      //   : '';
+      // });
 
       allData[resp.chamber] = resp;
     });
